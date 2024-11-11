@@ -1,0 +1,179 @@
+// styles.scss
+
+$background: #ffffff;
+$mainTheme: #66cdaa;
+$pointTheme: #4a4a4a;
+$fontWhite: #ffffff;
+$fontBlack: #000000;
+
+$fontTitle: "Black Han Sans", sans-serif;
+$fontContents: "Nanum Gothic", sans-serif;
+
+@use "~bootstrap/scss/bootstrap";
+@import "~animate.css/animate.min.css";
+
+.layout-app {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.layout-header {
+  height: 8%;
+  width: 100%;
+}
+
+.layout-body {
+  min-height: 84%;
+  width: 100%;
+}
+
+.layout-footer {
+  height: 8%;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  background-color: $mainTheme;
+  text-align: left;
+  color: $fontWhite;
+  padding: 0.8rem;
+}
+
+.header .logo {
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  align-items: center;
+}
+
+.logo .title {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  color: $fontWhite;
+  font-family: $fontTitle;
+  font-weight: bold;
+  font-size: 32px;
+  text-decoration: none;
+
+  &:hover {
+    animation: flash 1.5s;
+  }
+}
+
+.logo .location {
+  display: flex;
+  align-items: center;
+  color: $pointTheme;
+  font-family: $fontTitle;
+  font-weight: bold;
+  font-size: 21px;
+  margin-left: 10px;
+}
+
+.header .login {
+  display: flex;
+  align-items: center;
+  background-color: $mainTheme;
+  border: 2px solid $fontWhite;
+  border-radius: 12px !important;
+  color: $fontWhite;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  font-family: $fontTitle;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 3px;
+
+  &:hover {
+    background-color: $pointTheme;
+  }
+
+  &:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.footer {
+  height: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 1rem;
+  background-color: $mainTheme;
+  padding: 1rem;
+}
+
+.footer-button {
+  background-color: $background;
+  border: none;
+  border-radius: 50%;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &.active {
+    background-color: $pointTheme;
+  }
+
+  &:hover {
+    background-color: $pointTheme;
+  }
+}
+
+.footer-button-git {
+  background-color: $fontBlack;
+  border: none;
+  border-radius: 50%;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $pointTheme;
+  }
+}
+
+.icon {
+  color: $mainTheme;
+  font-size: 1.5rem;
+}
+
+.icon-git {
+  color: $fontWhite;
+  font-size: 1.5rem;
+}
+
+.footer-button.active .icon {
+  color: $background;
+}
+
+// 스크롤바 커스텀
+::-webkit-scrollbar {
+  width: 4px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: $background;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $mainTheme;
+  border-radius: 10px;
+}
