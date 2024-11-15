@@ -1,8 +1,8 @@
-# name: Auto Merge, Build, and Deploy to Docker Hub and AWS ECR
+# name: Auto Merge, Build, and Deploy to Docker Hub
 
 # on:
 #   schedule:
-#     - cron: '0 0 * * *' # 매일 자정 00:00 (한국 시간, UTC+9 기준)
+#     - cron: '05 3 * * *' # 매일 자정 00:00 (한국 시간, UTC+9 기준)
 #   workflow_dispatch: # 수동 실행 가능
 
 # permissions:
@@ -12,7 +12,6 @@
 # jobs:
 #   auto_merge_build_deploy:
 #     runs-on: ubuntu-latest
-#     if: github.ref == 'refs/heads/main'  # 'main' 브랜치에서만 실행
 #     outputs:
 #       has_new_commits: ${{ env.has_new_commits }}
 
@@ -22,9 +21,12 @@
 
 #       # Git 설정
 #       - name: Configure Git
+#         env:
+#           GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+#           GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
 #         run: |
-#           git config --global user.email "power4206@gmail.com"
-#           git config --global user.name "KHY90"
+#           git config --global user.email "$GIT_USER_EMAIL"
+#           git config --global user.name "$GIT_USER_NAME"
 
 #       # feat/* 브랜치에서 dev 브랜치에 새 커밋이 있는지 확인
 #       - name: Check for new commits in feat/* branches
@@ -80,7 +82,7 @@
 #             fi
 #           done
 
-#       # Docker Hub 로그인 및 빌드
+#       # Docker 빌드 및 Docker Hub 푸시
 #       - name: Log in to Docker Hub
 #         if: env.has_new_commits == 'true'
 #         uses: docker/login-action@v2
@@ -90,38 +92,15 @@
 
 #       - name: Build and push Docker image to Docker Hub
 #         if: env.has_new_commits == 'true'
-#         env:
-#           REACT_APP_LLM: ${{ secrets.REACT_APP_LLM }}
-#           REACT_APP_TTS: ${{ secrets.REACT_APP_TTS }}
 #         run: |
 #           git fetch origin dev
 #           git checkout dev
 #           git pull origin dev  # 최신 dev 브랜치 가져오기
           
 #           # Docker 빌드
-#           docker build -t yaggugifrontapp --build-arg REACT_APP_LLM=$REACT_APP_LLM --build-arg REACT_APP_TTS=$REACT_APP_TTS .
-#           docker tag yaggugifrontapp:latest ${{ secrets.DOCKER_USERNAME }}/yaggugifrontapp:latest
-#           docker push ${{ secrets.DOCKER_USERNAME }}/yaggugifrontapp:latest
-
-#       # AWS ECR 로그인
-#       - name: Log in to AWS ECR
-#         if: env.has_new_commits == 'true'
-#         uses: aws-actions/amazon-ecr-login@v1
-
-#       # ECR에 Docker 이미지 푸시
-#       - name: Push Docker image to AWS ECR
-#         if: env.has_new_commits == 'true'
-#         env:
-#           REACT_APP_LLM: ${{ secrets.REACT_APP_LLM }}
-#           REACT_APP_TTS: ${{ secrets.REACT_APP_TTS }}
-#         run: |
-#           # ECR 리포지토리 URI
-#           ECR_REPOSITORY_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}"
-
-#           # Docker Hub에서 이미지를 pull하고 ECR에 푸시
-#           docker pull ${{ secrets.DOCKER_USERNAME }}/yaggugifrontapp:latest
-#           docker tag ${{ secrets.DOCKER_USERNAME }}/yaggugifrontapp:latest $ECR_REPOSITORY_URI:latest
-#           docker push $ECR_REPOSITORY_URI:latest
+#           docker build -t narrativa_front .
+#           docker tag narrativa_front:latest ${{ secrets.DOCKER_USERNAME }}/narrativa_front:latest
+#           docker push ${{ secrets.DOCKER_USERNAME }}/narrativa_front:latest
 
 #   deploy_local:
 #     runs-on: self-hosted
@@ -134,15 +113,54 @@
 #           username: ${{ secrets.DOCKER_USERNAME }}
 #           password: ${{ secrets.DOCKER_PASSWORD }}
 
-#       - name: Remove existing Docker container and image
-#         shell: cmd
+#       - name: Set execution policy to allow scripts to run
+#         shell: powershell
 #         run: |
-#           docker stop yaggugifrontapp 2>NUL || echo "Container not running or already stopped"
-#           docker rm yaggugifrontapp 2>NUL || echo "Container not found or already removed"
-#           docker rmi ${{ secrets.DOCKER_USERNAME }}/yaggugifrontapp:latest 2>NUL || echo "Image not found or already removed"
+#           Set-ExecutionPolicy RemoteSigned -Scope Process -Force
+#           Write-Output "Execution policy set to RemoteSigned"
+
+#       - name: Remove existing Docker container and image
+#         shell: powershell
+#         run: |
+#           try {
+#             docker stop narrativa_front
+#             Write-Output "Successfully stopped container narrativa_front"
+#           } catch {
+#             Write-Output "Error stopping container: $_"
+#           }
+
+#           try {
+#             docker rm narrativa_front
+#             Write-Output "Successfully removed container narrativa_front"
+#           } catch {
+#             Write-Output "Error removing container: $_"
+#           }
+
+#           try {
+#             docker rmi ${{ secrets.DOCKER_USERNAME }}/narrativa_front:latest
+#             Write-Output "Successfully removed image narrativa_front:latest"
+#           } catch {
+#             Write-Output "Error removing image: $_"
+#           }
+
+#           exit 0  # 오류 발생 여부에 관계없이 성공으로 간주
 
 #       - name: Pull Docker image from Docker Hub and run container
-#         shell: cmd
+#         shell: powershell
 #         run: |
-#           docker pull ${{ secrets.DOCKER_USERNAME }}/yaggugifrontapp:latest
-#           docker run -d -p 3010:3010 --name yaggugifrontapp ${{ secrets.DOCKER_USERNAME }}/yaggugifrontapp:latest
+#           try {
+#             docker pull ${{ secrets.DOCKER_USERNAME }}/narrativa_front:latest
+#             Write-Output "Successfully pulled the latest image from Docker Hub"
+#           } catch {
+#             Write-Output "Error pulling image from Docker Hub: $_"
+#             exit 1  # 중요한 단계이므로 실패 시 exit 1로 설정
+#           }
+
+#           try {
+#             docker run -d -p 3010:3010 --name narrativa_front ${{ secrets.DOCKER_USERNAME }}/narrativa_front:latest
+#             Write-Output "Successfully started container narrativa_front"
+#           } catch {
+#             Write-Output "Error starting container: $_"
+#             exit 1  # 중요한 단계이므로 실패 시 exit 1로 설정
+#           }
+
